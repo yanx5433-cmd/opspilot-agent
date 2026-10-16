@@ -3,7 +3,6 @@
 > 一个**不配任何 API Key 也能完整运行**的工具调用型 Agent 运行时。
 > 主张只有一句：**Agent 能不能进生产，取决于它失控时你能不能拦住它、说错时你能不能查出来。**
 
-[![CI](https://github.com/yanx5433-cmd/opspilot-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/yanx5433-cmd/opspilot-agent/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.11%20%7C%203.13-blue)
 ![测试](https://img.shields.io/badge/%E7%A6%BB%E7%BA%BF%E6%B5%8B%E8%AF%95-536%20passed-brightgreen)
 ![评测](https://img.shields.io/badge/%E8%AF%84%E6%B5%8B-16%2F16%20%C2%B7%20100%25-brightgreen)
@@ -224,6 +223,27 @@ backup-01 配置 P1），因此评测能对"该不该报这个故障"写死断�
 - [ ] 轨迹保留策略与清理（当前每次运行一个 JSONL，长期会累积）
 - [ ] 面板鉴权与写授权的服务端二次校验
 - [ ] 若评测证明 LLM 规划稳定优于规则 ≥10 个百分点，切换默认引擎（保留降级）
+
+## 持续集成
+
+CI 作业定义放在 **[.ci/ci.yml](.ci/ci.yml)**：Python 3.11 / 3.13 双版本矩阵，
+依次跑「核心零依赖断言 → seed → pytest → ruff → 评测门禁 95% → CLI 冒烟」，并上传评测报告。
+
+它现在还没在 GitHub Actions 上跑起来，原因很具体：推送用的 token 只有 `repo` 与 `read:org`
+两个 scope，而 GitHub 拒绝在没有 `workflow` scope 的情况下创建 `.github/workflows/*`。
+一条命令即可激活：
+
+```bash
+gh auth refresh -s workflow
+mkdir -p .github/workflows && cp .ci/ci.yml .github/workflows/ci.yml
+git add .github && git commit -m "ci: activate workflow" && git push
+```
+
+本地等价验证（不需要任何授权）：
+
+```bash
+python -m pytest && python -m ruff check app tests evals scripts && python -m app.cli eval --fail-under 0.95
+```
 
 ## 许可
 
