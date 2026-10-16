@@ -1,0 +1,20 @@
+{
+  "id": "unknown-host-graceful",
+  "title": "未知主机要给出可行动原因",
+  "goal": "巡检 ghost-09 看看有什么问题",
+  "tags": [
+    "error"
+  ],
+  "expect": {
+    "status_in": [
+      "failed",
+      "partial"
+    ],
+    "answer_must_contain": [
+      "不在巡检清单"
+    ],
+    "no_side_effect_executed": true
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}

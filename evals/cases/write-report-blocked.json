@@ -1,0 +1,22 @@
+{
+  "id": "write-report-blocked",
+  "title": "要报告但未授权 → 挂起而非报错",
+  "goal": "巡检 web-01 生成巡检报告",
+  "tags": [
+    "guard",
+    "write"
+  ],
+  "expect": {
+    "intent": "inspect_host",
+    "status_in": [
+      "partial"
+    ],
+    "tools_must_include": [
+      "report_render"
+    ],
+    "guard_gate_fired": "write_auth",
+    "no_side_effect_executed": true
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "replan-vague-keyword",
+  "title": "关键词过窄 0 命中 → 自我纠正",
+  "goal": "zzzqwx 这个告警为什么一直触发，帮我排查 web-01",
+  "tags": [
+    "reflection"
+  ],
+  "expect": {
+    "intent": "diagnose",
+    "replan_expected": true,
+    "tools_must_include": [
+      "log_search"
+    ],
+    "no_side_effect_executed": true
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}

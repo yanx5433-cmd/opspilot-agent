@@ -1,0 +1,26 @@
+{
+  "id": "write-ticket-with-evidence",
+  "title": "工单必须由证据派生并落台账",
+  "goal": "巡检 db-01 并开一张工单",
+  "approve": [
+    "ticket_create"
+  ],
+  "tags": [
+    "write"
+  ],
+  "expect": {
+    "intent": "inspect_host",
+    "status_in": [
+      "done"
+    ],
+    "tools_must_include": [
+      "ticket_create"
+    ],
+    "evidence_kinds_min": [
+      "doc"
+    ],
+    "artifact_expected": false
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}

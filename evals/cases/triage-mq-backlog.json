@@ -1,0 +1,24 @@
+{
+  "id": "triage-mq-backlog",
+  "title": "mq-01 队列堆积取回处置手册",
+  "goal": "mq-01 队列堆积了，怎么处理",
+  "tags": [
+    "diagnose"
+  ],
+  "expect": {
+    "status_in": [
+      "done"
+    ],
+    "tools_must_include": [
+      "kb_search"
+    ],
+    "evidence_kinds_min": [
+      "doc"
+    ],
+    "answer_must_contain": [
+      "手册"
+    ]
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}

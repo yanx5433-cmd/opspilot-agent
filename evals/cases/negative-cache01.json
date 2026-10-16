@@ -1,0 +1,21 @@
+{
+  "id": "negative-cache01",
+  "title": "阴性对照：健康主机不许编故障",
+  "goal": "巡检 cache-01 看看有没有问题",
+  "tags": [
+    "negative"
+  ],
+  "expect": {
+    "intent": "inspect_host",
+    "status_in": [
+      "done"
+    ],
+    "no_root_cause_claimed": true,
+    "answer_must_contain": [
+      "未发现"
+    ],
+    "no_side_effect_executed": true
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}

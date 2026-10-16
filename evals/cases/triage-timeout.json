@@ -1,0 +1,20 @@
+{
+  "id": "triage-timeout",
+  "title": "接口超时的日志取证",
+  "goal": "web-01 上 app-order 的接口超时是怎么回事",
+  "tags": [
+    "diagnose"
+  ],
+  "expect": {
+    "intent": "diagnose",
+    "tools_must_include": [
+      "log_search"
+    ],
+    "evidence_kinds_min": [
+      "log"
+    ],
+    "no_side_effect_executed": true
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "config-p1-backup01",
+  "title": "backup-01 配置体检出 P1",
+  "goal": "backup-01 的配置有什么风险",
+  "tags": [
+    "config"
+  ],
+  "expect": {
+    "status_in": [
+      "done"
+    ],
+    "tools_must_include": [
+      "config_check"
+    ],
+    "evidence_kinds_min": [
+      "config"
+    ],
+    "answer_must_contain": [
+      "备份"
+    ]
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}

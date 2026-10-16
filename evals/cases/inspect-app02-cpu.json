@@ -1,0 +1,21 @@
+{
+  "id": "inspect-app02-cpu",
+  "title": "app-02 CPU 巡检（注入的饱和）",
+  "goal": "巡检 app-02 的 CPU",
+  "tags": [
+    "inspect"
+  ],
+  "expect": {
+    "intent": "inspect_host",
+    "status_in": [
+      "done"
+    ],
+    "evidence_kinds_min": [
+      "metric",
+      "config"
+    ],
+    "no_side_effect_executed": true
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}

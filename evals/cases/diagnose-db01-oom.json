@@ -1,0 +1,31 @@
+{
+  "id": "diagnose-db01-oom",
+  "title": "db-01 重启根因（注入的 OOM）",
+  "goal": "db-01 为什么一直在重启，帮我排查根因",
+  "tags": [
+    "diagnose"
+  ],
+  "expect": {
+    "intent": "diagnose",
+    "status_in": [
+      "done"
+    ],
+    "tools_must_include": [
+      "root_cause_rank",
+      "log_search",
+      "kb_search",
+      "runbook_get"
+    ],
+    "evidence_kinds_min": [
+      "metric",
+      "log",
+      "doc"
+    ],
+    "answer_must_contain": [
+      "OOM"
+    ],
+    "no_side_effect_executed": true
+  },
+  "plan_mode": "rule",
+  "notes": "断言行为契约：工具序列 / 证据覆盖 / 护栏命中 / 引用完整性。数据为固定种子合成。"
+}
