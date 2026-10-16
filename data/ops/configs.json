@@ -1,0 +1,87 @@
+{
+  "web-01": {
+    "nginx": {
+      "worker_connections": 512,
+      "keepalive": 0,
+      "log_level": "DEBUG",
+      "cert_expire_days": 24,
+      "backup_enabled": true
+    },
+    "app-order": {
+      "jdbc_pool_max": 20,
+      "read_timeout_ms": 3000,
+      "retry": 2,
+      "log_level": "INFO",
+      "backup_enabled": true
+    }
+  },
+  "web-02": {
+    "nginx": {
+      "worker_connections": 2048,
+      "keepalive": 32,
+      "log_level": "WARN",
+      "cert_expire_days": 210,
+      "backup_enabled": true
+    }
+  },
+  "app-01": {
+    "app-order": {
+      "jdbc_pool_max": 16,
+      "read_timeout_ms": 3000,
+      "retry": 1,
+      "log_level": "INFO",
+      "backup_enabled": true
+    },
+    "app-user": {
+      "jdbc_pool_max": 32,
+      "read_timeout_ms": 2000,
+      "retry": 2,
+      "log_level": "INFO",
+      "backup_enabled": true
+    }
+  },
+  "app-02": {
+    "app-pay": {
+      "jdbc_pool_max": 12,
+      "read_timeout_ms": 9000,
+      "retry": 0,
+      "log_level": "INFO",
+      "backup_enabled": true
+    }
+  },
+  "db-01": {
+    "mysqld": {
+      "jdbc_pool_max": 8,
+      "read_timeout_ms": 12000,
+      "retry": 0,
+      "log_level": "INFO",
+      "backup_enabled": true,
+      "cert_expire_days": 240
+    }
+  },
+  "cache-01": {
+    "redis-server": {
+      "keepalive": 60,
+      "log_level": "NOTICE",
+      "backup_enabled": true,
+      "cert_expire_days": 300
+    }
+  },
+  "mq-01": {
+    "beam-sasl": {
+      "read_timeout_ms": 5000,
+      "retry": 3,
+      "log_level": "INFO",
+      "backup_enabled": true,
+      "cert_expire_days": 150
+    }
+  },
+  "backup-01": {
+    "restic": {
+      "backup_enabled": false,
+      "cert_expire_days": 18,
+      "retry": 1,
+      "log_level": "INFO"
+    }
+  }
+}

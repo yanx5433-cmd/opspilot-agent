@@ -1,0 +1,137 @@
+{
+  "generated_by": "scripts/seed_demo.py",
+  "seed": 20261017,
+  "hours": 72,
+  "note": "合成演示数据，非真实生产数据",
+  "hosts": {
+    "web-01": {
+      "role": "nginx",
+      "env": "prod",
+      "region": "cn-hangzhou",
+      "owner": "平台组",
+      "ip": "10.12.3.11",
+      "services": [
+        "nginx",
+        "app-order"
+      ],
+      "upstream": [],
+      "downstream": [
+        "app-01",
+        "app-02"
+      ]
+    },
+    "web-02": {
+      "role": "nginx",
+      "env": "prod",
+      "region": "cn-hangzhou",
+      "owner": "平台组",
+      "ip": "10.12.3.12",
+      "services": [
+        "nginx",
+        "app-user"
+      ],
+      "upstream": [],
+      "downstream": [
+        "app-01"
+      ]
+    },
+    "app-01": {
+      "role": "app",
+      "env": "prod",
+      "region": "cn-hangzhou",
+      "owner": "交易组",
+      "ip": "10.12.3.21",
+      "services": [
+        "app-order",
+        "app-user"
+      ],
+      "upstream": [
+        "web-01",
+        "web-02"
+      ],
+      "downstream": [
+        "db-01",
+        "cache-01"
+      ]
+    },
+    "app-02": {
+      "role": "app",
+      "env": "prod",
+      "region": "cn-shanghai",
+      "owner": "交易组",
+      "ip": "10.12.4.22",
+      "services": [
+        "app-pay"
+      ],
+      "upstream": [
+        "web-01"
+      ],
+      "downstream": [
+        "db-01",
+        "mq-01"
+      ]
+    },
+    "db-01": {
+      "role": "mysql",
+      "env": "prod",
+      "region": "cn-hangzhou",
+      "owner": "DBA",
+      "ip": "10.12.3.31",
+      "services": [
+        "mysqld",
+        "mysqld-exporter"
+      ],
+      "upstream": [
+        "app-01",
+        "app-02"
+      ],
+      "downstream": [
+        "backup-01"
+      ]
+    },
+    "cache-01": {
+      "role": "redis",
+      "env": "prod",
+      "region": "cn-hangzhou",
+      "owner": "平台组",
+      "ip": "10.12.3.41",
+      "services": [
+        "redis-server"
+      ],
+      "upstream": [
+        "app-01"
+      ],
+      "downstream": []
+    },
+    "mq-01": {
+      "role": "rabbitmq",
+      "env": "prod",
+      "region": "cn-shanghai",
+      "owner": "平台组",
+      "ip": "10.12.4.51",
+      "services": [
+        "beam-sasl",
+        "mq-consumer"
+      ],
+      "upstream": [
+        "app-02"
+      ],
+      "downstream": []
+    },
+    "backup-01": {
+      "role": "backup",
+      "env": "prod",
+      "region": "cn-hangzhou",
+      "owner": "运维组",
+      "ip": "10.12.3.61",
+      "services": [
+        "restic",
+        "cron"
+      ],
+      "upstream": [
+        "db-01"
+      ],
+      "downstream": []
+    }
+  }
+}

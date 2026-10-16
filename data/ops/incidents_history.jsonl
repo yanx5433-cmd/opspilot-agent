@@ -1,0 +1,8 @@
+{"date": "2026-09-28", "host": "web-01", "symptom": "接口 5xx 突增", "root_cause": "磁盘写满导致日志无法落盘", "fix": "清理历史日志并开启 logrotate", "mttr_min": 34, "recurrence": 3}
+{"date": "2026-08-14", "host": "db-01", "symptom": "连接被拒", "root_cause": "连接池上限过低且应用未重试", "fix": "max_connections 上调 + 应用侧加退避重试", "mttr_min": 52, "recurrence": 2}
+{"date": "2026-07-02", "host": "db-01", "symptom": "mysqld 重启", "root_cause": "内存不足被 OOM Killer 终止", "fix": "限制慢查询并加内存，swap 兜底", "mttr_min": 41, "recurrence": 2}
+{"date": "2026-06-19", "host": "app-02", "symptom": "支付延迟上升", "root_cause": "MQ 消费停滞导致请求堆积", "fix": "扩容消费者并下调 prefetch", "mttr_min": 28, "recurrence": 1}
+{"date": "2026-05-30", "host": "backup-01", "symptom": "备份缺失告警", "root_cause": "备份任务开关被关闭", "fix": "恢复开关并加备份成功率监控", "mttr_min": 15, "recurrence": 1}
+{"date": "2026-05-11", "host": "web-01", "symptom": "HTTPS 握手失败", "root_cause": "证书到期未续", "fix": "接入自动续期并设 30 天告警", "mttr_min": 22, "recurrence": 2}
+{"date": "2026-04-22", "host": "app-02", "symptom": "CPU 长期满载", "root_cause": "正则回溯导致单线程打满", "fix": "改写正则并加超时保护", "mttr_min": 63, "recurrence": 1}
+{"date": "2026-04-03", "host": "cache-01", "symptom": "命中率下降", "root_cause": "缓存键版本不一致", "fix": "统一键前缀与过期策略", "mttr_min": 19, "recurrence": 1}

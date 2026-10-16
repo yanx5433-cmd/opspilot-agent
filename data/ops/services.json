@@ -1,0 +1,116 @@
+{
+  "web-01": [
+    {
+      "name": "nginx",
+      "port": 80,
+      "status": "up",
+      "uptime_h": 1820,
+      "restarts_24h": 0
+    },
+    {
+      "name": "app-order",
+      "port": 8081,
+      "status": "up",
+      "uptime_h": 410,
+      "restarts_24h": 1
+    }
+  ],
+  "web-02": [
+    {
+      "name": "nginx",
+      "port": 80,
+      "status": "up",
+      "uptime_h": 2210,
+      "restarts_24h": 0
+    },
+    {
+      "name": "app-user",
+      "port": 8082,
+      "status": "up",
+      "uptime_h": 2210,
+      "restarts_24h": 0
+    }
+  ],
+  "app-01": [
+    {
+      "name": "app-order",
+      "port": 8081,
+      "status": "up",
+      "uptime_h": 96,
+      "restarts_24h": 2
+    },
+    {
+      "name": "app-user",
+      "port": 8082,
+      "status": "up",
+      "uptime_h": 96,
+      "restarts_24h": 0
+    }
+  ],
+  "app-02": [
+    {
+      "name": "app-pay",
+      "port": 8083,
+      "status": "up",
+      "uptime_h": 12,
+      "restarts_24h": 5
+    }
+  ],
+  "db-01": [
+    {
+      "name": "mysqld",
+      "port": 3306,
+      "status": "up",
+      "uptime_h": 6,
+      "restarts_24h": 3
+    },
+    {
+      "name": "mysqld-exporter",
+      "port": 9104,
+      "status": "down",
+      "uptime_h": 0,
+      "restarts_24h": 0
+    }
+  ],
+  "cache-01": [
+    {
+      "name": "redis-server",
+      "port": 6379,
+      "status": "up",
+      "uptime_h": 4300,
+      "restarts_24h": 0
+    }
+  ],
+  "mq-01": [
+    {
+      "name": "beam-sasl",
+      "port": 5672,
+      "status": "up",
+      "uptime_h": 640,
+      "restarts_24h": 0
+    },
+    {
+      "name": "mq-consumer",
+      "port": 0,
+      "status": "up",
+      "uptime_h": 640,
+      "restarts_24h": 1
+    }
+  ],
+  "backup-01": [
+    {
+      "name": "restic",
+      "port": 0,
+      "status": "up",
+      "uptime_h": 30,
+      "restarts_24h": 0
+    },
+    {
+      "name": "cron",
+      "port": 0,
+      "status": "up",
+      "uptime_h": 7200,
+      "restarts_24h": 0
+    }
+  ]
+}
