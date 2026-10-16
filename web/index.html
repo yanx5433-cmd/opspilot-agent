@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpsPilot · 观测面板</title>
+<style>
+  :root {
+    --bg:#0b0f14; --bg2:#111823; --bg3:#16202e; --line:#1f2b3d; --line2:#2a3a52;
+    --fg:#c9d6e5; --dim:#728499; --dimmer:#4c5b6e;
+    --ok:#3fb98c; --warn:#d9a441; --bad:#e05561; --info:#4a9eda; --mut:#6b7f95;
+    --mono:"Cascadia Mono","JetBrains Mono",Consolas,"Courier New",monospace;
+    --sans:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:13px/1.55 var(--sans); }
+  header { display:flex; align-items:baseline; gap:14px; padding:10px 16px;
+    background:var(--bg2); border-bottom:1px solid var(--line); }
+  header h1 { font-size:14px; margin:0; letter-spacing:.5px; font-weight:600; }
+  header .sub { color:var(--dim); font:11px var(--mono); }
+  header .right { margin-left:auto; display:flex; gap:8px; font:11px var(--mono); color:var(--dim); }
+  .grid { display:grid; grid-template-columns:290px minmax(0,1fr) 370px; gap:10px; padding:10px; }
+  .panel { background:var(--bg2); border:1px solid var(--line); border-radius:4px; min-width:0; }
+  .ph { padding:7px 10px; border-bottom:1px solid var(--line); font:11px var(--mono);
+    letter-spacing:1.2px; text-transform:uppercase; color:var(--dim);
+    display:flex; align-items:center; gap:8px; }
+  .pb { padding:10px; }
+  .full { grid-column:1 / -1; }
+  textarea { width:100%; height:78px; resize:vertical; background:var(--bg); color:var(--fg);
+    border:1px solid var(--line2); border-radius:3px; padding:7px; font:12px/1.5 var(--mono); }
+  textarea:focus, select:focus { outline:1px solid var(--info); }
+  button, select { font:11px var(--mono); background:var(--bg3); color:var(--fg);
+    border:1px solid var(--line2); border-radius:3px; padding:5px 8px; cursor:pointer; }
+  button:hover { border-color:var(--info); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .presets { display:flex; flex-direction:column; gap:5px; margin:9px 0; }
+  .presets button { text-align:left; white-space:normal; color:var(--dim); font:11px/1.45 var(--sans); }
+  .presets button:hover { color:var(--fg); }
+  .sec { margin-top:12px; padding-top:9px; border-top:1px dashed var(--line); }
+  .sec h3 { margin:0 0 6px; font:11px var(--mono); color:var(--dim); font-weight:600; letter-spacing:.5px; }
+  .note { color:var(--dimmer); font-size:11px; }
+  label.ck { display:flex; gap:6px; align-items:flex-start; font:11px/1.5 var(--mono);
+    color:var(--fg); margin:3px 0; cursor:pointer; }
+  label.ck input { margin-top:2px; accent-color:var(--warn); }
+  label.ck .k { color:var(--dimmer); font:10px var(--sans); }
+  .runbtn { width:100%; margin-top:10px; padding:9px; background:#1b3a2e; border-color:#2c6a51;
+    color:#7fe0bb; font:600 12px/1 var(--mono); letter-spacing:1px; }
+  .runbtn:hover { border-color:var(--ok); }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .chip { font:10px/1 var(--mono); padding:4px 7px; border-radius:2px; border:1px solid var(--line2); color:var(--dim); }
+  .chip b { color:var(--fg); font-weight:600; }
+  .chip.done,.chip.ok { border-color:#215c46; color:#5fd3a8; }
+  .chip.partial { border-color:#6b5620; color:#e2b566; }
+  .chip.blocked { border-color:#6b2730; color:#f0808c; }
+  .chip.failed { border-color:#6b2730; color:#f0808c; }
+  .answer { background:var(--bg); border:1px solid var(--line); border-left:2px solid var(--info);
+    border-radius:3px; padding:10px 12px; white-space:pre-wrap; font:12px/1.7 var(--sans);
+    word-break:break-word; max-height:340px; overflow:auto; margin-bottom:12px; }
+  .tl { max-height:520px; overflow:auto; font:11px/1.5 var(--mono); }
+  .ev { border-left:2px solid var(--line); padding:4px 8px; margin:0 0 3px; }
+  .ev .hd { display:flex; gap:7px; align-items:baseline; }
+  .ev .sq { color:var(--dimmer); min-width:26px; }
+  .ev .ty { font-weight:600; letter-spacing:.5px; }
+  .ev .bd { color:var(--dim); padding-left:33px; word-break:break-word; }
+  .ev.plan { border-left-color:var(--info); }
+  .ev.tool_call { border-left-color:var(--line2); }
+  .ev.observation { border-left-color:#2c6a51; margin-left:14px; }
+  .ev.reflect { border-left-color:#7a5fa8; }
+  .ev.llm { border-left-color:#8a7030; }
+  .ev.citation { border-left-color:var(--dimmer); }
+  .ev.answer { border-left-color:var(--ok); }
+  .ev.guard { background:#131c26; }
+  .ev.guard.block { border-left-color:var(--bad); background:#1d1114; }
+  .ev.guard.block .bd,.ev.guard.block .ty { color:#f0808c; }
+  .ev.guard.soft { border-left-color:var(--warn); }
+  .ev .args { color:var(--dimmer); font-size:10px; }
+  .ev .err { color:#f0808c; }
+  .ev .rep { color:#c9a2f0; }
+  .ev .sub { padding-left:33px; color:var(--dimmer); font-size:10px; }
+  .t-plan{color:var(--info)} .t-tool_call{color:var(--mut)} .t-observation{color:var(--ok)}
+  .t-guard{color:var(--warn)} .t-reflect{color:#a086d0} .t-llm{color:#c0a34a}
+  .t-citation{color:var(--dim)} .t-answer{color:#5fd3a8}
+  .evc { display:inline-block; background:#12291f; border:1px solid #2c6a51; color:#6fdcb0;
+    border-radius:2px; padding:0 4px; font:10px var(--mono); margin:0 1px; cursor:default; }
+  .tbl { width:100%; border-collapse:collapse; font:10.5px/1.4 var(--mono); }
+  .tbl th { text-align:left; color:var(--dimmer); font-weight:600; padding:3px 4px;
+    border-bottom:1px solid var(--line); font-size:10px; letter-spacing:.5px; }
+  .tbl td { padding:4px; border-bottom:1px solid #141d29; vertical-align:top; word-break:break-word; }
+  .tbl tr.neg td { opacity:.45; }
+  .tbl .num { color:#e2b566; text-align:right; }
+  .tbl .src { color:var(--dim); font-size:10px; }
+  .filter { display:flex; gap:5px; margin-bottom:8px; }
+  .filter button.on { border-color:var(--info); color:#8fd0ff; }
+  .blocker { border-left:2px solid var(--bad); background:#1d1114; padding:5px 8px;
+    margin:4px 0; font:11px/1.5 var(--sans); color:#f0b0b6; word-break:break-word; }
+  .dropped { border-left:2px solid var(--warn); background:#1a1710; padding:5px 8px;
+    margin:4px 0; font:11px/1.5 var(--sans); color:#dcc08a; word-break:break-word; }
+  .empty { color:var(--dimmer); font-size:11px; padding:4px 0; }
+  .twoc { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tracelist { max-height:250px; overflow:auto; }
+  .tr { display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center;
+    padding:5px 8px; border-bottom:1px solid #141d29; cursor:pointer; font:11px var(--mono); }
+  .tr:hover { background:var(--bg3); }
+  .tr .g { color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tr .s { font-weight:600; } .tr .s.done{color:var(--ok)} .tr .s.partial{color:var(--warn)}
+  .tr .s.blocked,.tr .s.failed{color:var(--bad)} .tr .s.unknown{color:var(--dimmer)}
+  .tr.sel { background:#152232; border-left:2px solid var(--info); }
+  .kv { font:11px var(--mono); display:flex; justify-content:space-between; gap:8px; padding:2px 0; }
+  .kv span:first-child { color:var(--dim); }
+  .spin { display:inline-block; width:9px; height:9px; border:2px solid #2c6a51;
+    border-top-color:#7fe0bb; border-radius:50%; animation:sp .7s linear infinite; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+  .hint { color:var(--dimmer); font-size:10px; margin-top:6px; }
+  ::-webkit-scrollbar { width:8px; height:8px; } ::-webkit-scrollbar-thumb { background:#25344a; }
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <h1>OpsPilot <span class="sub">/ 观测面板</span></h1>
+  <div class="sub" id="hh">—</div>
+  <div class="right">
+    <span id="h-tools">tools —</span><span id="h-llm">llm —</span><span id="h-data">data —</span>
+  </div>
+</header>
+
+<div class="grid">
+  <!-- ---------------------------------------------------------- 左：控制 -->
+  <div class="panel">
+    <div class="ph">任务控制</div>
+    <div class="pb">
+      <textarea id="goal" placeholder="用自然语言描述目标，例如：db-01 为什么一直在重启"></textarea>
+      <div class="presets" id="presets"></div>
+      <div class="sec">
+        <h3>写操作授权</h3>
+        <div id="approvals"><span class="note">加载中…</span></div>
+        <div class="note">未授权将被护栏挂起（blocked，等待人工确认）。</div>
+      </div>
+      <div class="sec">
+        <h3>规划引擎</h3>
+        <select id="plan_mode" style="width:100%">
+          <option value="auto">auto — 有 Key 用 LLM，失败降级规则</option>
+          <option value="rule">rule — 强制规则引擎（确定性基线）</option>
+          <option value="llm">llm — 要求 LLM 规划</option>
+        </select>
+      </div>
+      <button class="runbtn" id="run">运 行</button>
+      <div class="hint" id="runhint">回车运行（Ctrl+Enter）。结论必须挂在证据上，无证据的表述会被裁掉。</div>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------- 中：时间线 -->
+  <div class="panel">
+    <div class="ph">执行轨迹 <span id="runtag" class="chip" style="display:none"></span></div>
+    <div class="pb">
+      <div class="chips" id="chips"></div>
+      <div class="answer" id="answer">等待任务…</div>
+      <div class="tl" id="timeline"><div class="empty">尚无事件。</div></div>
+    </div>
+  </div>
+
+  <!-- --------------------------------------------------------- 右：证据 -->
+  <div class="panel">
+    <div class="ph">证据账本 <span id="evcount" class="chip">0</span></div>
+    <div class="pb">
+      <div class="filter">
+        <button id="f-all" class="on">全部</button><button id="f-pos">有信息</button>
+        <button id="f-neg">空证据</button>
+      </div>
+      <div style="max-height:210px;overflow:auto" id="evidence"><div class="empty">—</div></div>
+      <div class="sec" style="margin-top:12px;padding-top:9px;border-top:1px dashed var(--line)">
+        <h3>阻塞项 <span id="bc" class="chip">0</span></h3>
+        <div id="blockers"><div class="empty">无</div></div>
+      </div>
+      <div class="sec" style="margin-top:12px;padding-top:9px;border-top:1px dashed var(--line)">
+        <h3>幻觉拦截 <span id="dc" class="chip">0</span></h3>
+        <div class="note" style="margin-bottom:5px">引用闸门裁掉的无证据表述 / 无效引用。</div>
+        <div id="dropped"><div class="empty">无</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------- 底：历史 + 评测 -->
+  <div class="panel full">
+    <div class="twoc" style="padding:10px">
+      <div>
+        <div class="ph" style="padding:0 0 7px;border:0">轨迹历史</div>
+        <div class="tracelist" id="traces"><div class="empty">加载中…</div></div>
+      </div>
+      <div>
+        <div class="ph" style="padding:0 0 7px;border:0">离线评测</div>
+        <div id="evals"><div class="empty">加载中…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const PRESETS = [
+  "db-01 为什么一直在重启，帮我排查根因",
+  "巡检 web-01 生成巡检报告，并开一张工单",
+  "巡检 cache-01 看看有没有问题",
+  "zzzqwx 这个告警为什么一直触发，帮我排查 web-01",
+  "帮我把生产库删了",
+];
+const ETYPES = ["plan","guard","tool_call","observation","reflect","llm","citation","answer"];
+let stepsById = {};   // 本次运行的 step.id → step（用于标注 [重规划]）
+let filterMode = "all";
+let busy = false;
+
+/* ---------- 安全 DOM 构建：任何模型文本只走 textContent，绝不 innerHTML ---------- */
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined && text !== null) n.textContent = String(text);
+  return n;
+}
+function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); return node; }
+function addTextWithCitations(node, text) {
+  // 把正文里的 [ev:xxx] 就地渲染成证据 chip，其余部分是纯文本节点。
+  const re = /\[ev:([A-Za-z0-9_]+)\]/g;
+  let last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) node.appendChild(document.createTextNode(text.slice(last, m.index)));
+    node.appendChild(el("span", "evc", "ev:" + m[1]));
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) node.appendChild(document.createTextNode(text.slice(last)));
+}
+function fmt(v) {
+  if (v === null || v === undefined) return "";
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+function shortTime(ms) { const d = new Date(ms); return d.toLocaleTimeString("zh-CN", { hour12: false }); }
+
+/* ---------- 头部状态 ---------- */
+async function loadHealth() {
+  try {
+    const h = await (await fetch("/api/health")).json();
+    $("hh").textContent = "v" + h.version + " · " + h.plan_mode + " · " + h.trace_dir;
+    $("h-tools").textContent = "tools " + h.tools;
+    $("h-llm").textContent = "llm " + (h.llm_configured ? "已配置" : "未配置(规则引擎)");
+    $("h-data").textContent = "写授权 " + (h.write_approval_required ? "必需" : "免审");
+  } catch (e) { $("hh").textContent = "健康检查失败: " + e.message; }
+}
+async function loadTools() {
+  try {
+    const t = await (await fetch("/api/tools")).json();
+    clear($("approvals"));
+    t.write.forEach((w) => {
+      const lb = el("label", "ck");
+      const cb = el("input"); cb.type = "checkbox"; cb.value = w.name;
+      lb.appendChild(cb);
+      lb.appendChild(el("span", null, w.name));
+      lb.appendChild(el("span", "k", "— " + w.description.replace("【写】", "").slice(0, 26)));
+      $("approvals").appendChild(lb);
+    });
+    if (!t.write.length) $("approvals").appendChild(el("div", "note", "无写工具"));
+  } catch (e) { $("approvals").textContent = "工具清单加载失败"; }
+}
+async function loadData() {
+  try {
+    const d = await (await fetch("/api/data")).json();
+    const ds = d.describe || {};
+    $("h-data").textContent = "hosts " + (ds.hosts || 0) + " · logs " + (ds.log_lines || 0);
+  } catch (e) { /* 面板次要信息，失败不阻断 */ }
+}
+
+/* ---------- 顶部 chips ---------- */
+function renderChips(r) {
+  const box = clear($("chips"));
+  const b = r.budget_snapshot || {};
+  box.appendChild(el("span", "chip " + r.status, "状态 " + r.status));
+  box.appendChild(el("span", "chip", "引擎 " + r.mode));
+  box.appendChild(el("span", "chip", "task " + r.task_id));
+  const bt = el("span", "chip");
+  bt.appendChild(el("b", null, "预算"));
+  bt.appendChild(document.createTextNode(" " + Object.entries(b)
+    .map(([k, v]) => k + " " + v).join("  |  ")));
+  box.appendChild(bt);
+  const ap = (r.approval && r.approval.granted) || [];
+  box.appendChild(el("span", "chip " + (ap.length ? "partial" : ""), "写授权 " + (ap.join(",") || "无")));
+  if (r.approval && r.approval.ignored && r.approval.ignored.length)
+    box.appendChild(el("span", "chip blocked", "忽略授权 " + r.approval.ignored.join(",")));
+}
+
+/* ---------- 结论 ---------- */
+function renderAnswer(r) {
+  const box = clear($("answer"));
+  if (!r.answer) { box.appendChild(el("span", "empty", "（本次运行没有产出结论文本）")); return; }
+  addTextWithCitations(box, r.answer);
+}
+
+/* ---------- 时间线：面板的核心 ---------- */
+function evRow(type, seq, title, bodyNodes, mods) {
+  const row = el("div", "ev " + type + (mods ? " " + mods : ""));
+  const hd = el("div", "hd");
+  hd.appendChild(el("span", "sq", seq === undefined ? "·" : String(seq)));
+  hd.appendChild(el("span", "ty t-" + type, title || type));
+  row.appendChild(hd);
+  if (bodyNodes) { const bd = el("div", "bd"); bodyNodes.forEach((n) => bd.appendChild(n)); row.appendChild(bd); }
+  return row;
+}
+
+function renderEvents(events) {
+  const box = clear($("timeline"));
+  if (!events || !events.length) { box.appendChild(el("div", "empty", "无事件。")); return; }
+  const ordered = events.slice().sort((a, b) => (a.seq || 0) - (b.seq || 0));
+  ordered.forEach((e) => {
+    const p = e.payload || {};
+    const bd = (t) => el("span", null, t);
+    if (e.type === "plan") {
+      const replan = /^replan/i.test(fmt(p.engine));
+      const nodes = [bd((p.engine || "?") + " · 意图 " + (p.intent || "-") +
+        " · " + (p.steps || []).length + " 步" + (replan ? " " : ""))];
+      if (replan) nodes.push(el("span", "rep", "[重规划 " + p.engine + "]"));
+      box.appendChild(evRow("plan", e.seq, "规划", nodes));
+      (p.steps || []).forEach((s, i) => {
+        const sub = el("div", "sub", "  " + (i + 1) + ". " + s.tool + " — " + (s.reason || ""));
+        box.appendChild(sub);
+      });
+    } else if (e.type === "guard") {
+      const blocked = p.allowed === false;
+      const mods = blocked ? "block" : (p.soft || p.skipped ? "block soft" : "");
+      const nodes = [bd("闸门 " + (p.gate || "?") + " · " + (blocked ? "拦截" : (p.skipped ? "跳过" : "放行")))];
+      if (p.kind) nodes.push(bd(" [" + p.kind + "]"));
+      if (p.tool) nodes.push(bd(" · " + p.tool));
+      if (p.reason) nodes.push(bd(" — " + p.reason));
+      if (p.problems) nodes.push(bd(" — " + (Array.isArray(p.problems) ? p.problems.join("；") : fmt(p.problems))));
+      box.appendChild(evRow("guard", e.seq, "护栏", nodes, mods));
+    } else if (e.type === "tool_call") {
+      const st = stepsById[p.step];
+      const nodes = [bd(p.tool + (st && st.replan_round ? " " : ""))];
+      if (st && st.replan_round) nodes.push(el("span", "rep", "[重规划#" + st.replan_round + "]"));
+      nodes.push(el("span", "args", " " + JSON.stringify(p.args || {})));
+      box.appendChild(evRow("tool_call", e.seq, "调用", nodes));
+    } else if (e.type === "observation") {
+      let nodes;
+      if (p.error) nodes = [el("span", "err", "✗ " + (p.tool || "") + " " + p.error)];
+      else {
+        nodes = [bd("✓ " + (p.summary || ""))];
+        if (p.evidence) nodes.push(el("span", "evc", "ev:" + p.evidence));
+      }
+      box.appendChild(evRow("observation", e.seq, "观察", nodes));
+    } else if (e.type === "reflect") {
+      const nodes = [bd(p.verdict + " · 缺口 " + ((p.gaps || []).join("、") || "无"))];
+      if ((p.added || []).length) nodes.push(el("span", "rep", "补步 [重规划] " + p.added.map((a) => a.tool).join(",")));
+      box.appendChild(evRow("reflect", e.seq, "反思", nodes));
+    } else if (e.type === "llm") {
+      box.appendChild(evRow("llm", e.seq, "LLM",
+        [bd((p.purpose || "?") + " · " + (p.outcome || "?") + " · " + (p.model || "-") +
+          (p.chars ? " · " + p.chars + " 字" : ""))]));
+    } else if (e.type === "citation") {
+      const nodes = [bd("保留 " + p.kept + " 句 · 裁掉 " + p.dropped +
+        " · 无证据比例 " + (typeof p.unevidenced_ratio === "number" ? p.unevidenced_ratio.toFixed(2) : p.unevidenced_ratio))];
+      if ((p.numeric_suspects || []).length) nodes.push(el("span", "err", " 数字不可溯源 " + p.numeric_suspects.length));
+      if ((p.invalid_refs || []).length) nodes.push(el("span", "err", " 无效引用 " + p.invalid_refs.join(",")));
+      box.appendChild(evRow("citation", e.seq, "引用闸门", nodes));
+    } else if (e.type === "answer") {
+      box.appendChild(evRow("answer", e.seq, "结论", [bd(p.status + " · " + p.mode + " · " + p.chars + " 字")]));
+    } else {
+      box.appendChild(evRow("guard", e.seq, e.type || "?", [bd(JSON.stringify(p).slice(0, 220))]));
+    }
+  });
+  const end = el("div", "ev");
+  end.appendChild(el("div", "bd", "共 " + ordered.length + " 条事件，类型分布：" +
+    ETYPES.map((t) => t + "=" + ordered.filter((e) => e.type === t).length).join(" ")));
+  box.appendChild(end);
+}
+
+/* ---------- 证据 / 阻塞 / 幻觉 ---------- */
+function isPositive(e) { return e.positive === undefined ? true : !!e.positive; }
+function renderEvidence(list) {
+  window.__lastEvidence = list || [];
+  const box = clear($("evidence"));
+  const evs = list || [];
+  const shown = evs.filter((e) => filterMode === "all" ? true : filterMode === "pos" ? isPositive(e) : !isPositive(e));
+  $("evcount").textContent = evs.length + "（显示 " + shown.length + "）";
+  if (!shown.length) { box.appendChild(el("div", "empty", evs.length ? "该筛选下无条目。" : "本次运行没有产出证据。")); return; }
+  const tb = el("table", "tbl");
+  const head = el("thead"); const hr = el("tr");
+  ["id", "kind", "source", "conf", "summary"].forEach((h) => hr.appendChild(el("th", null, h)));
+  head.appendChild(hr); tb.appendChild(head);
+  const body = el("tbody");
+  shown.forEach((e) => {
+    const tr = el("tr", isPositive(e) ? "" : "neg");
+    tr.appendChild(el("td", null, (e.id || "").replace(/^ev_/, "")));
+    tr.appendChild(el("td", null, e.kind || ""));
+    tr.appendChild(el("td", "src", e.source || ""));
+    tr.appendChild(el("td", "num", (e.confidence !== undefined ? e.confidence : "").toString()));
+    tr.appendChild(el("td", null, e.summary || ""));
+    body.appendChild(tr);
+  });
+  tb.appendChild(body);
+  box.appendChild(tb);
+}
+function renderList(nodeId, countId, items, cls, emptyText) {
+  const box = clear($(nodeId));
+  $(countId).textContent = String((items || []).length);
+  if (!items || !items.length) { box.appendChild(el("div", "empty", emptyText)); return; }
+  items.forEach((t) => box.appendChild(el("div", cls, t)));
+}
+
+/* ---------- 渲染一次完整结果 ---------- */
+function renderResult(r, tag) {
+  stepsById = {};
+  (r.steps || []).forEach((s) => { stepsById[s.id] = s; });
+  $("runtag").style.display = "";
+  $("runtag").textContent = tag || "实时运行";
+  renderChips(r);
+  renderAnswer(r);
+  renderEvents(r.events);
+  renderEvidence(r.evidence);
+  renderList("blockers", "bc", r.blockers, "blocker", "无阻塞：所有步骤都被放行。");
+  renderList("dropped", "dc", r.dropped_claims, "dropped", "引用闸门未裁掉任何表述。");
+}
+
+/* ---------- 运行 ---------- */
+function approvedTools() {
+  return Array.from(document.querySelectorAll("#approvals input:checked")).map((i) => i.value);
+}
+async function run() {
+  if (busy) return;
+  const goal = $("goal").value.trim();
+  if (!goal) { $("runhint").textContent = "请先输入目标。"; return; }
+  busy = true; $("run").disabled = true; $("run").textContent = "运 行 中 …";
+  const box = clear($("timeline")); box.appendChild(el("div", "empty", "执行中（预算内串行推进）…"));
+  try {
+    const res = await fetch("/api/run", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ goal: goal, approve: approvedTools(), plan_mode: $("plan_mode").value }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      clear($("answer")).appendChild(el("span", "err", "HTTP " + res.status + "：" + (data.detail || JSON.stringify(data))));
+      clear(box).appendChild(el("div", "empty", "运行失败。"));
+    } else {
+      renderResult(data, "实时运行 " + shortTime(Date.now()));
+      loadTraces();
+    }
+  } catch (e) {
+    clear(box).appendChild(el("div", "err", "请求异常：" + e.message));
+  } finally {
+    busy = false; $("run").disabled = false; $("run").textContent = "运 行";
+  }
+}
+
+/* ---------- 轨迹历史 ---------- */
+async function loadTraces() {
+  const box = clear($("traces"));
+  try {
+    const d = await (await fetch("/api/traces")).json();
+    if (!d.traces.length) { box.appendChild(el("div", "empty", "暂无轨迹文件。")); return; }
+    d.traces.forEach((t) => {
+      const row = el("div", "tr"); row.dataset.task = t.task_id;
+      row.appendChild(el("span", "g", (t.goal || t.task_id).slice(0, 46)));
+      const meta = el("span", "note", "步" + t.steps + " 证" + t.evidence + " 裁" + t.dropped);
+      row.appendChild(meta);
+      row.appendChild(el("span", "s " + t.status, t.status + (t.mode ? "/" + t.mode : "")));
+      row.addEventListener("click", () => loadTrace(t.task_id, row));
+      box.appendChild(row);
+    });
+  } catch (e) { clear(box).appendChild(el("div", "empty", "历史加载失败：" + e.message)); }
+}
+async function loadTrace(taskId, row) {
+  Array.from(document.querySelectorAll(".tr.sel")).forEach((n) => n.classList.remove("sel"));
+  if (row) row.classList.add("sel");
+  const box = clear($("timeline"));
+  stepsById = {};
+  clear($("chips"));
+  const ck = (cls, txt) => { const c = el("span", "chip", txt); $("chips").appendChild(c); };
+  try {
+    const res = await fetch("/api/trace/" + encodeURIComponent(taskId));
+    const data = await res.json();
+    if (!res.ok) { clear(box).appendChild(el("div", "err", data.detail || "加载失败")); return; }
+    const s = data.summary || {};
+    $("runtag").style.display = ""; $("runtag").textContent = "回放 " + taskId;
+    ck("chip " + (s.status || ""), "状态 " + (s.status || "?"));
+    ck("chip", "引擎 " + (s.mode || "?"));
+    ck("chip", "task " + taskId);
+    ck("chip", "预算 " + Object.entries(s.budget || {}).map(([k, v]) => k + " " + v).join(" | "));
+    const c = s.counters || {};
+    ck("chip", "步 " + c.steps + " 证 " + c.evidence + " 引 " + c.citations + " 裁 " + c.dropped);
+    if (data.seq_check === "degraded") {
+      const w = ck("chip partial", "seq 校验降级（trace 层已知缺陷）");
+      w.title = data.seq_warning || "";
+    }
+    const ans = clear($("answer"));
+    addTextWithCitations(ans, (data.header ? "目标：" + data.header.goal + "\n\n" : "") +
+      "（离线回放：结论正文只在实时运行时返回，此处展示事件序列。）");
+    renderEvents(data.events);
+    clear($("evidence")).appendChild(el("div", "empty", "回放视图不含证据表，请点“运行”后查看。"));
+    renderList("blockers", "bc", [], "blocker", "回放视图不含阻塞项。");
+    renderList("dropped", "dc", [], "dropped", "回放视图不含裁除表述。");
+  } catch (e) { clear(box).appendChild(el("div", "err", "请求异常：" + e.message)); }
+}
+
+/* ---------- 评测卡片（缺报告时优雅降级） ---------- */
+async function loadEvals() {
+  const box = clear($("evals"));
+  try {
+    const d = await (await fetch("/api/evals")).json();
+    if (!d.available) { box.appendChild(el("div", "empty", d.note || "评测报告尚不存在。")); return; }
+    const rp = d.report || {};
+    Object.entries(rp)
+      .filter(([, v]) => typeof v !== "object" || v === null)
+      .forEach(([k, v]) => {
+        const kv = el("div", "kv");
+        kv.appendChild(el("span", null, k)); kv.appendChild(el("span", null, fmt(v)));
+        box.appendChild(kv);
+      });
+    const nested = rp.suites || rp.by_mode || rp.by_suite;
+    if (nested && typeof nested === "object") {
+      const keys = Object.keys(nested).slice(0, 8);
+      keys.forEach((k) => {
+        const v = nested[k];
+        const kv = el("div", "kv");
+        kv.appendChild(el("span", null, k));
+        kv.appendChild(el("span", null, typeof v === "object"
+          ? Object.entries(v).filter(([, x]) => typeof x !== "object").map(([x, y]) => x + "=" + y).join(" ")
+          : fmt(v)));
+        box.appendChild(kv);
+      });
+    }
+    box.appendChild(el("div", "hint", "来源：" + d.path));
+  } catch (e) { clear(box).appendChild(el("div", "empty", "评测接口异常：" + e.message)); }
+}
+
+/* ---------- 初始化 ---------- */
+function init() {
+  PRESETS.forEach((g) => {
+    const b = el("button", null, g);
+    b.addEventListener("click", () => { $("goal").value = g; $("goal").focus(); });
+    $("presets").appendChild(b);
+  });
+  $("run").addEventListener("click", run);
+  $("goal").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); }
+  });
+  const setF = (mode) => {
+    filterMode = mode;
+    ["all", "pos", "neg"].forEach((m) => $("f-" + m).classList.toggle("on", m === mode));
+    renderEvidence(window.__lastEvidence || []);
+  };
+  $("f-all").addEventListener("click", () => setF("all"));
+  $("f-pos").addEventListener("click", () => setF("pos"));
+  $("f-neg").addEventListener("click", () => setF("neg"));
+  loadHealth(); loadTools(); loadData(); loadTraces(); loadEvals();
+  // 深链：?trace=task_xxx 直接回放一条历史；?goal=...&autorun=1 打开即跑（便于分享演示链接与截图）
+  const qs = new URLSearchParams(location.search);
+  if (qs.get("trace")) setTimeout(() => loadTrace(qs.get("trace")), 260);
+  else if (qs.get("goal")) {
+    $("goal").value = qs.get("goal");
+    if (qs.get("autorun") === "1") setTimeout(run, 320);
+  }
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
