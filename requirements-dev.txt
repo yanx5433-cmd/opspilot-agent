@@ -1,0 +1,5 @@
+# OpsPilot 运行时核心**只使用 Python 标准库**（urllib / json / re / concurrent.futures /
+# dataclasses / hashlib / datetime）。本文件里的东西一个都不参与产品运行逻辑：
+# 装了它们才能跑测试与静态检查。请保持 core 零依赖 —— 这是本项目的设计承诺。
+pytest>=8.0
+ruff>=0.6

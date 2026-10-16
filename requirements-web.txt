@@ -1,0 +1,5 @@
+# 可选：观测面板（app/server.py）需要的 Web 依赖。
+# 运行时核心（app/agent + app/tools + app/algos）不依赖本文件中的任何包，
+# `python -m app.cli run` 在未安装 fastapi 的机器上必须照常工作。
+fastapi>=0.110
+uvicorn[standard]>=0.29

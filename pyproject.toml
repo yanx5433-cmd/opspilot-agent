@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opspilot-agent"
+version = "0.3.0"
+description = "工具调用型运维巡检与故障诊断 Agent 运行时（零依赖内核：无 API Key 也能完整跑通）"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "OpsPilot" }]
+keywords = ["agent", "llm", "tool-calling", "sre", "observability", "evaluation"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Systems Administration",
+]
+# 运行时核心只用标准库。任何新增依赖都必须落到下面的可选分组里，不能进 dependencies。
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+web = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
+
+[project.scripts]
+opspilot = "app.cli:main"
+
+[tool.setuptools]
+packages = ["app", "app.agent", "app.tools"]
+
+# --------------------------------------------------------------------------- ruff
+# pytest 配置在 pytest.ini（单独一份，裸仓库无元数据时也能跑）。
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = [".venv", "data", "run", "evals/reports", "web"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "RUF", "SIM"]
+ignore = [
+    # 中文代码库里的全角标点（：（）、）不是笔误，RUF001~003 会大面积误报
+    "RUF001", "RUF002", "RUF003",
+    # 中文注释与 docstring 天然比英文长，110 列限制只会逼人把话说短
+    "E501",
+    # 以下四条是风格建议，本仓库以可读性优先，逐条判断而不是一律执行
+    "SIM105", "SIM108", "SIM110", "SIM116",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 这三处必须先改 sys.path 再 import app.*，E402 是结构性的，不是疏忽
+"app/cli.py" = ["E402"]
+"app/server.py" = ["E402"]
+"tests/conftest.py" = ["E402"]
+# 轨迹写入器要持有长生命周期句柄（事件边产生边 flush，进程崩了也留有部分轨迹），
+# 因此不能用 with 包住整个函数；seed 与测试里的单次读文件同理。
+"app/agent/trace.py" = ["SIM115"]
+"scripts/seed_demo.py" = ["SIM115"]
+"tests/*" = ["SIM115", "RUF005", "RUF012", "RUF059", "B007", "C408", "C416"]
+# 说明：测试里按位置解包元组时常只关心其中一两维（RUF059）、共享夹具用类属性承载（RUF012）、
+# 断言辅助里 dict()/推导式写法更直白（C408/C416）。这些是测试风格，不是缺陷，
+# 生产代码 app/ 与 scripts/ 不享受以上任何一条豁免。
