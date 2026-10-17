@@ -10,6 +10,8 @@
 ![Ruff](https://img.shields.io/badge/code%20style-ruff-informational)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
+**本仓库**：<https://github.com/yanx5433-cmd/opspilot-agent> · 姊妹项目（内容运营智能体，同一套工程方法论）：<https://github.com/yanx5433-cmd/contentpilot-agent>
+
 领域是运维巡检与故障诊断，但运行时本身与领域无关：换掉 `app/tools/` 与评分规则，
 同一套规划—执行—反思—引用校验的骨架可以搬到任何有"只读观测 + 需审批动作"的场景。
 
